@@ -7,24 +7,11 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/localization/localizations.dart';
 import 'core/localization/language_controller.dart';
-import 'features/issue/issue_model.dart';
 import 'features/auth/login_page.dart';
+import 'core/storage/hive_init.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // 🔒 Hive başlatma (UI BLOKLANMAZ)
-  await Hive.initFlutter();
-
-  // Adapter sadece bir kez register edilir
-  if (!Hive.isAdapterRegistered(0)) {
-    Hive.registerAdapter(IssueModelAdapter());
-  }
-
-  // ❗ await YOK → ilk frame gecikmez
-  Hive.openBox<IssueModel>('issues');
-  Hive.openBox('profile');
-
   runApp(const MyApp());
 }
 
@@ -53,9 +40,9 @@ class MyApp extends StatelessWidget {
                 GlobalCupertinoLocalizations.delegate,
               ],
               home: FutureBuilder(
-                future: Hive.openBox('session'),
+                future: HiveInit.init(),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
+                  if (snapshot.connectionState != ConnectionState.done) {
                     return const Scaffold(
                       body: Center(child: CircularProgressIndicator()),
                     );
